@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="dashboard">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">FRAS</div>
+        <ul>
+            <li><a href="/">🏠 Dashboard</a></li>
+            <li><a href="/start">📷 Start Attendance</a></li>
+            <li><a href="/register">➕ Register Student</a></li>
+            <li><a href="/attendance">📊 Attendance Records</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+
+        <h2>Admin Overview</h2>
+
+        {% if success %}
+        <div class="success-box">
+            ✅ Attendance marked for <strong>{{ success }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="cards">
+
+            <div class="stat-card">
+                <h3>Total Students</h3>
+                <p>{{ total_students }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Today's Attendance</h3>
+                <p>{{ today_attendance }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Last Marked</h3>
+                <p>{{ last_student }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>System Status</h3>
+                <p style="color:#22c55e;">Active</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
