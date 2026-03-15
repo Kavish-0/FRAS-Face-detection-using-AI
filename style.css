@@ -1,0 +1,91 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background: #0f172a;
+    color: white;
+}
+
+.dashboard {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    background: #111827;
+    padding: 30px 20px;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 40px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    margin: 20px 0;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #cbd5e1;
+    transition: 0.3s;
+}
+
+.sidebar ul li a:hover {
+    color: #22c55e;
+}
+
+.main {
+    flex: 1;
+    padding: 40px;
+}
+
+.cards {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 12px;
+    width: 220px;
+    text-align: center;
+    transition: 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.stat-card h3 {
+    margin-bottom: 15px;
+    color: #94a3b8;
+}
+
+.stat-card p {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.success-box {
+    background: #22c55e;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    color: black;
+    font-weight: bold;
+}
