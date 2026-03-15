@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import cv2
 import os
 import numpy as np
@@ -61,11 +61,6 @@ def train_model():
 
     logger.info("Model training completed.")
     logger.info(f"Total images trained: {len(face_samples)}")
-=======
-import cv2
-import os
-import numpy as np
-from PIL import Image
 
 def train_model():
 
@@ -102,4 +97,4 @@ def train_model():
     recognizer.save(MODEL_PATH)
 
     print("Model retrained successfully.")
->>>>>>> 94f5c06e7a69eeceeaa7353e178e1f24186bf456
+

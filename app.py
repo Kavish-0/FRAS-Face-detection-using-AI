@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import threading
 import os
 import glob
@@ -31,43 +30,29 @@ from database import (
 
 app = Flask(__name__)
 
-# ==========================
-# Webcam
-# ==========================
-
 camera = cv2.VideoCapture(0)
 
 def generate_frames():
-
     while True:
-
         success, frame = camera.read()
-
         if not success:
             break
 
-        else:
+        ret, buffer = cv2.imencode(".jpg", frame)
+        frame = buffer.tobytes()
 
-            ret, buffer = cv2.imencode(".jpg", frame)
-            frame = buffer.tobytes()
-
-            yield (b"--frame\r\n"
-                   b"Content-Type: image/jpeg\r\n\r\n" +
-                   frame + b"\r\n")
+        yield (b"--frame\r\n"
+               b"Content-Type: image/jpeg\r\n\r\n" +
+               frame + b"\r\n")
 
 
 @app.route("/video_feed")
 def video_feed():
-
     return Response(
         generate_frames(),
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
-
-# ==========================
-# Thread control
-# ==========================
 
 lock = threading.Lock()
 
@@ -76,13 +61,9 @@ recognition_state = {
     "result": None
 }
 
-# ==========================
-# Dashboard
-# ==========================
 
 @app.route("/")
 def home():
-
     return render_template(
         "index.html",
         total_students=get_total_students(),
@@ -90,19 +71,11 @@ def home():
         last_student=get_last_attendance()
     )
 
-# ==========================
-# Recognition Page
-# ==========================
 
 @app.route("/recognition")
 def recognition():
-
     return render_template("recognition.html")
 
-
-# ==========================
-# Start Recognition
-# ==========================
 
 @app.route("/start", methods=["POST"])
 def start():
@@ -127,19 +100,10 @@ def start():
     return jsonify({"status": "started"})
 
 
-# ==========================
-# Recognition Status
-# ==========================
-
 @app.route("/start/status")
 def start_status():
-
     return jsonify(recognition_state)
 
-
-# ==========================
-# Register Student
-# ==========================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -160,10 +124,6 @@ def register():
     return render_template("register.html")
 
 
-# ==========================
-# Students
-# ==========================
-
 @app.route("/students")
 def students():
 
@@ -174,10 +134,6 @@ def students():
         students=students
     )
 
-
-# ==========================
-# Delete Student
-# ==========================
 
 @app.route("/delete/<student_id>")
 def delete(student_id):
@@ -198,10 +154,6 @@ def delete(student_id):
     return redirect(url_for("students"))
 
 
-# ==========================
-# Attendance Records
-# ==========================
-
 @app.route("/attendance")
 def attendance():
 
@@ -212,10 +164,6 @@ def attendance():
         records=records
     )
 
-
-# ==========================
-# Export CSV
-# ==========================
 
 @app.route("/export")
 def export():
@@ -232,93 +180,10 @@ def export():
     )
 
 
-# ==========================
-# Logout
-# ==========================
-
 @app.route("/logout")
 def logout():
-
     return redirect(url_for("home"))
 
 
-# ==========================
-
 if __name__ == "__main__":
-=======
-from flask import Flask, render_template, redirect, url_for, request
-from recognise import run_recognition
-from collect_face import collect_faces
-from trainer import train_model
-from database import (
-    add_student,
-    get_attendance_records,
-    get_total_students,
-    get_today_attendance,
-    get_last_attendance
-)
-
-app = Flask(__name__)
-
-
-# ===============================
-# DASHBOARD HOME
-# ===============================
-@app.route("/")
-def home():
-    return render_template(
-        "index.html",
-        total_students=get_total_students(),
-        today_attendance=get_today_attendance(),
-        last_student=get_last_attendance(),
-        success=None
-    )
-
-
-# ===============================
-# START ATTENDANCE
-# ===============================
-@app.route("/start")
-def start():
-
-    name = run_recognition()
-
-    return render_template(
-        "index.html",
-        success=name if name else None,
-        total_students=get_total_students(),
-        today_attendance=get_today_attendance(),
-        last_student=get_last_attendance()
-    )
-
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-
-    if request.method == "POST":
-
-        student_id = request.form["student_id"]
-        name = request.form["name"]
-
-        add_student(student_id, name)
-        collect_faces(student_id)
-        train_model()
-
-        return redirect(url_for("home"))
-
-    return render_template("register.html")
-
-
-# ===============================
-# VIEW ATTENDANCE
-# ===============================
-@app.route("/attendance")
-def attendance():
-    records = get_attendance_records()
-    return render_template("attendance.html", records=records)
-
-
-
-if __name__ == "__main__":
->>>>>>> 94f5c06e7a69eeceeaa7353e178e1f24186bf456
     app.run(debug=True)
