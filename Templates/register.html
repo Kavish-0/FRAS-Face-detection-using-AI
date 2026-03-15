@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Register Student</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="shell">
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="logo">FRAS</div>
+
+<ul>
+
+<li><a href="/">🏠 Dashboard</a></li>
+
+<li><a href="/recognition">📷 Start Attendance</a></li>
+
+<li><a href="/register">➕ Register Student</a></li>
+
+<li><a href="/attendance">📊 Attendance</a></li>
+
+<li><a href="/students">👨‍🎓 Students</a></li>
+
+<li><a href="/logout">🚪 Logout</a></li>
+
+</ul>
+
+</div>
+
+
+<!-- Main Content -->
+
+<div class="main">
+
+<h2>Register New Student</h2>
+
+<!-- Camera Preview -->
+
+<div class="camera-box">
+
+<h3>Camera Preview</h3>
+
+<img id="camera" width="520">
+
+<br><br>
+
+<button class="btn btn-primary" onclick="startCamera()">
+
+Start Camera
+
+</button>
+
+<button class="btn btn-outline" onclick="stopCamera()">
+
+Stop Camera
+
+</button>
+
+</div>
+
+
+<!-- Registration Form -->
+
+<form method="POST">
+
+<div class="form-group">
+
+<label class="form-label">Student ID</label>
+
+<input class="form-input" type="number" name="student_id" required>
+
+</div>
+
+
+<div class="form-group">
+
+<label class="form-label">Student Name</label>
+
+<input class="form-input" type="text" name="name" required>
+
+</div>
+
+
+<button class="btn btn-primary" type="submit">
+
+Register & Capture Face
+
+</button>
+
+</form>
+
+<br>
+
+<a href="/" class="btn btn-outline">
+
+Back to Dashboard
+
+</a>
+
+</div>
+
+</div>
+
+<script>
+
+function startCamera(){
+
+document.getElementById("camera").src="/video_feed"
+
+}
+
+function stopCamera(){
+
+document.getElementById("camera").src=""
+
+}
+
+</script>
+
+</body>
+
+</html>

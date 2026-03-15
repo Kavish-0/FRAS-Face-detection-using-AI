@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Attendance Recognition</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</head>
+
+<body>
+
+<div class="main">
+
+<h2>Face Recognition Attendance</h2>
+
+<div class="camera-box">
+
+<img src="{{ url_for('video_feed') }}" width="600">
+
+</div>
+
+<br>
+
+<button onclick="startRecognition()" class="btn btn-primary">
+
+Start Recognition
+
+</button>
+
+<br><br>
+
+<a href="/" class="btn btn-outline">Back</a>
+
+</div>
+
+</body>
+</html>
