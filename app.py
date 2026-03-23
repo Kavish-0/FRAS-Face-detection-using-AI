@@ -1,4 +1,3 @@
-import threading
 import cv2
 from flask import (
     Flask,
@@ -33,35 +32,33 @@ from database import (
 app = Flask(__name__)
 app.secret_key = "fras_secret"
 
-# ── Recognition state ─────────────────────────────────────────────────
-recognition_state = {
-    "running": False,
-    "result": None
-}
 
+# ── Camera preview ────────────────────────────────────────────────────
+# A single global camera for the live preview stream only.
+# Before doing any recognition or face collection, we release it
+# so OpenCV can reopen it cleanly on the main thread.
 
-# ── Camera: re-open if needed so the feed works after recognition ─────
-def get_camera():
-    cap = cv2.VideoCapture(0)
-    return cap
+camera = cv2.VideoCapture(0)
 
 
 def generate_frames():
-    cap = get_camera()
+    global camera
     while True:
-        success, frame = cap.read()
+        if not camera.isOpened():
+            camera = cv2.VideoCapture(0)
+        success, frame = camera.read()
         if not success:
-            # Try to reopen if camera dropped
-            cap.release()
-            cap = get_camera()
+            camera.release()
+            camera = cv2.VideoCapture(0)
             continue
         ret, buffer = cv2.imencode(".jpg", frame)
-        frame = buffer.tobytes()
+        if not ret:
+            continue
         yield (
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n"
-            + frame +
-            b"\r\n"
+            + buffer.tobytes()
+            + b"\r\n"
         )
 
 
@@ -99,7 +96,7 @@ def home():
     if "admin" not in session:
         return redirect(url_for("login"))
 
-    week_labels, week_data   = get_weekly_attendance()
+    week_labels,  week_data  = get_weekly_attendance()
     month_labels, month_data = get_monthly_attendance()
     attendance_rate          = get_attendance_rate()
 
@@ -128,29 +125,28 @@ def recognition():
 @app.route("/start_recognition")
 def start_recognition():
     """
-    Runs face recognition in a background thread.
-    Can be triggered multiple times — each call spawns a fresh thread
-    as long as the previous one has finished.
+    Releases the preview camera, runs recognition on the MAIN THREAD
+    (required on Windows — OpenCV windows must be on the main thread),
+    then redirects to attendance.
     """
     if "admin" not in session:
         return redirect(url_for("login"))
 
-    if not recognition_state["running"]:
-        recognition_state["running"] = True
-        recognition_state["result"] = None
+    global camera
 
-        def _run():
-            result = run_recognition()
-            recognition_state["result"] = result
-            recognition_state["running"] = False
+    # Step 1 — release preview so recognition can open the camera
+    camera.release()
 
-        t = threading.Thread(target=_run, daemon=True)
-        t.start()
+    # Step 2 — run recognition on the main thread (blocks until done)
+    result = run_recognition()
+
+    # Step 3 — reopen preview camera for next time
+    camera = cv2.VideoCapture(0)
 
     return redirect(url_for("attendance"))
 
 
-# ── Reset today's attendance ──────────────────────────────────────────
+# ── Manual reset ──────────────────────────────────────────────────────
 
 @app.route("/reset_attendance")
 def reset_attendance():
@@ -160,22 +156,42 @@ def reset_attendance():
     return redirect(url_for("home"))
 
 
-# ── Register ──────────────────────────────────────────────────────────
+# ── Register student ──────────────────────────────────────────────────
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if "admin" not in session:
         return redirect(url_for("login"))
 
+    error = None
+
     if request.method == "POST":
         student_id = request.form["student_id"]
-        name = request.form["name"]
-        add_student(student_id, name)
+        name       = request.form["name"]
+
+        # Check for duplicate student ID
+        success = add_student(student_id, name)
+        if not success:
+            error = f"Student ID {student_id} already exists. Please use a different ID."
+            return render_template("register.html", error=error)
+
+        global camera
+
+        # Step 1 — release preview so face collection can open camera
+        camera.release()
+
+        # Step 2 — collect faces on main thread (opens OpenCV window)
         collect_faces(student_id)
+
+        # Step 3 — train model on the saved face images
         train_model()
+
+        # Step 4 — reopen preview camera
+        camera = cv2.VideoCapture(0)
+
         return redirect(url_for("students"))
 
-    return render_template("register.html")
+    return render_template("register.html", error=error)
 
 
 # ── Attendance ────────────────────────────────────────────────────────
@@ -185,8 +201,8 @@ def attendance():
     if "admin" not in session:
         return redirect(url_for("login"))
 
-    name = request.args.get("name")
-    date = request.args.get("date")
+    name    = request.args.get("name")
+    date    = request.args.get("date")
     records = get_attendance_records(name, date)
     return render_template("attendance.html", records=records)
 
@@ -234,4 +250,6 @@ def delete_student_route(student_id):
 # ── Run ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # use_reloader=False prevents Flask from spawning a second process
+    # that would also try to grab the camera
+    app.run(debug=True, use_reloader=False)

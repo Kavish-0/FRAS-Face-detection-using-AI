@@ -3,110 +3,93 @@ import os
 import time
 from database import mark_attendance, get_student_name
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 CASCADE_PATH = os.path.join(BASE_DIR, "haarcascades", "haarcascade_frontalface_default.xml")
-MODEL_PATH = os.path.join(BASE_DIR, "data", "trainer.yml")
+MODEL_PATH   = os.path.join(BASE_DIR, "data", "trainer.yml")
 
 CONFIDENCE_THRESHOLD = 70
 FACE_SIZE = (200, 200)
-
-CAMERA_W = 1280
-CAMERA_H = 720
+CAMERA_W  = 1280
+CAMERA_H  = 720
 
 
 def run_recognition():
+    """
+    Opens a fresh camera, runs recognition for up to 15 seconds,
+    marks attendance if a student is found, then fully releases
+    the camera so it can be reused next time.
+    """
 
     if not os.path.exists(MODEL_PATH):
         return None
 
     face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
-
-    recognizer = cv2.face.LBPHFaceRecognizer_create()
+    recognizer   = cv2.face.LBPHFaceRecognizer_create()
     recognizer.read(MODEL_PATH)
 
     cap = cv2.VideoCapture(0)
-
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_W)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,  CAMERA_W)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_H)
 
     start_time = time.time()
-    timeout = 15
+    timeout    = 15
+    result     = None
 
-    while True:
+    try:
+        while True:
 
-        ret, frame = cap.read()
-        if not ret:
-            break
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        frame = cv2.flip(frame, 1)
+            frame = cv2.flip(frame, 1)
+            gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.2, 5)
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            for (x, y, w, h) in faces:
 
-        faces = face_cascade.detectMultiScale(gray, 1.2, 5)
+                face_img = gray[y:y+h, x:x+w]
+                face_img = cv2.equalizeHist(face_img)
+                face_img = cv2.resize(face_img, FACE_SIZE)
 
-        for (x, y, w, h) in faces:
+                student_id, confidence = recognizer.predict(face_img)
 
-            face_img = gray[y:y+h, x:x+w]
+                if confidence < CONFIDENCE_THRESHOLD:
 
-            face_img = cv2.equalizeHist(face_img)
+                    name = get_student_name(student_id)
 
-            face_img = cv2.resize(face_img, FACE_SIZE)
+                    # Always insert — allows multiple markings per day
+                    mark_attendance(student_id)
 
-            student_id, confidence = recognizer.predict(face_img)
+                    label = f"{name} ({round(100 - confidence, 2)}%)"
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                    cv2.putText(frame, label, (x, y - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                    cv2.imshow("Recognition", frame)
+                    cv2.waitKey(1500)
 
-            if confidence < CONFIDENCE_THRESHOLD:
+                    result = name
+                    break   # attendance marked — exit face loop
 
-                name = get_student_name(student_id)
+                else:
+                    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+                    cv2.putText(frame, "Unknown", (x, y - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
 
-                mark_attendance(student_id)
+            cv2.imshow("Recognition", frame)
 
-                label = f"{name} ({round(100-confidence,2)}%)"
+            if result:
+                break
 
-                cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
+            if time.time() - start_time > timeout:
+                break
 
-                cv2.putText(
-                    frame,
-                    label,
-                    (x,y-10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.9,
-                    (0,255,0),
-                    2
-                )
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
-                cv2.imshow("Recognition", frame)
+    finally:
+        # Always release — allows camera restart next time
+        cap.release()
+        cv2.destroyAllWindows()
 
-                cv2.waitKey(1500)
-
-                cap.release()
-                cv2.destroyAllWindows()
-
-                return name
-
-            else:
-
-                cv2.rectangle(frame, (x,y), (x+w,y+h), (0,0,255), 2)
-
-                cv2.putText(
-                    frame,
-                    "Unknown",
-                    (x,y-10),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.9,
-                    (0,0,255),
-                    2
-                )
-
-        cv2.imshow("Recognition", frame)
-
-        if time.time() - start_time > timeout:
-            break
-
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    return None
+    return result

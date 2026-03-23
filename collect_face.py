@@ -5,19 +5,22 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-FACE_DIR = os.path.join(BASE_DIR, "data", "faces")
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+FACE_DIR     = os.path.join(BASE_DIR, "data", "faces")
 CASCADE_PATH = os.path.join(BASE_DIR, "haarcascades", "haarcascade_frontalface_default.xml")
 
 MAX_IMAGES = 150
-FACE_SIZE = (200, 200)
-
-CAMERA_W = 1280
-CAMERA_H = 720
+FACE_SIZE  = (200, 200)
+CAMERA_W   = 1280
+CAMERA_H   = 720
 
 
 def collect_faces(student_id):
+    """
+    Opens camera index 0, captures MAX_IMAGES face samples,
+    saves them to data/faces/, then fully releases the camera.
+    Must be called only when no other code is holding the camera.
+    """
 
     os.makedirs(FACE_DIR, exist_ok=True)
 
@@ -26,57 +29,59 @@ def collect_faces(student_id):
     cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
-        logger.error("Camera could not be opened")
+        logger.error("Camera could not be opened during face collection")
         return
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_W)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,  CAMERA_W)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_H)
 
     count = 0
 
-    while True:
+    try:
+        while True:
 
-        ret, frame = cap.read()
-        if not ret:
-            break
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        frame = cv2.flip(frame, 1)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = cv2.flip(frame, 1)
+            gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.2, 5)
 
-        faces = face_cascade.detectMultiScale(gray, 1.2, 5)
+            for (x, y, w, h) in faces:
 
-        for (x, y, w, h) in faces:
+                face_img = gray[y:y+h, x:x+w]
+                face_img = cv2.equalizeHist(face_img)
+                face_img = cv2.resize(face_img, FACE_SIZE)
 
-            face_img = gray[y:y+h, x:x+w]
-            face_img = cv2.equalizeHist(face_img)
-            face_img = cv2.resize(face_img, FACE_SIZE)
+                count += 1
 
-            count += 1
+                file_name = f"user.{student_id}.{count}.jpg"
+                file_path = os.path.join(FACE_DIR, file_name)
+                cv2.imwrite(file_path, face_img)
 
-            file_name = f"user.{student_id}.{count}.jpg"
-            file_path = os.path.join(FACE_DIR, file_name)
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
-            cv2.imwrite(file_path, face_img)
+            cv2.putText(
+                frame,
+                f"Images: {count}/{MAX_IMAGES} — press Q to stop early",
+                (20, 40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0, 255, 0),
+                2
+            )
 
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cv2.imshow("Collecting Faces — Stay Still", frame)
 
-        cv2.putText(
-            frame,
-            f"Images: {count}/{MAX_IMAGES}",
-            (20, 40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 255, 0),
-            2
-        )
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
-        cv2.imshow("Collecting Faces", frame)
+            if count >= MAX_IMAGES:
+                break
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
-        if count >= MAX_IMAGES:
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+    finally:
+        # Always release — even if an exception occurs
+        cap.release()
+        cv2.destroyAllWindows()
+        logger.info(f"Face collection done. {count} images saved for student {student_id}")

@@ -21,12 +21,18 @@ def connect_db():
 
 
 def add_student(student_id, name):
+    """Returns True on success, False if student ID already exists."""
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO students (id, name) VALUES (%s,%s)", (student_id, name))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("INSERT INTO students (id, name) VALUES (%s,%s)", (student_id, name))
+        conn.commit()
+        return True
+    except mysql.connector.errors.IntegrityError:
+        return False
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def update_student(student_id, name):
