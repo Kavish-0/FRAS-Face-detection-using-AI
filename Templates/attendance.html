@@ -1,45 +1,64 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>Attendance Records</title>
-
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRAS — Attendance Records</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<div class="main">
+<div class="shell">
 
-<h2>Attendance Records</h2>
+  <div class="sidebar">
+    <div class="logo">FRAS</div>
+    <ul>
+      <li><a href="/">Dashboard</a></li>
+      <li><a href="/recognition">Start Attendance</a></li>
+      <li><a href="/register">Register Student</a></li>
+      <li><a href="/attendance">Attendance</a></li>
+      <li><a href="/students">Students</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </div>
 
-<table>
+  <div class="main">
 
-<tr>
-<th>Name</th>
-<th>Date</th>
-<th>Time</th>
-</tr>
+    <h2>Attendance Records</h2>
+    <p class="page-sub">Filter and export attendance data</p>
 
-{% for row in records %}
+    <form method="GET" class="filter-bar">
+      <input type="text" name="name" placeholder="Search by student name"
+             value="{{ request.args.get('name', '') }}">
+      <input type="date" name="date"
+             value="{{ request.args.get('date', '') }}">
+      <button type="submit" class="btn-primary">Filter</button>
+      <a href="/export" class="btn btn-outline">Export CSV</a>
+    </form>
 
-<tr>
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Date</th>
+        <th>Time</th>
+      </tr>
+      {% for r in records %}
+      <tr>
+        <td>{{ r[0] }}</td>
+        <td>{{ r[1] }}</td>
+        <td>{{ r[2] }}</td>
+      </tr>
+      {% endfor %}
+      {% if not records %}
+      <tr>
+        <td colspan="3" style="text-align:center; color:var(--text-muted); padding:34px;">
+          No attendance records found.
+        </td>
+      </tr>
+      {% endif %}
+    </table>
 
-<td>{{ row[0] }}</td>
-<td>{{ row[1] }}</td>
-<td>{{ row[2] }}</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-<br>
-
-<a href="/" class="btn">Back to Dashboard</a>
+  </div>
 
 </div>
 

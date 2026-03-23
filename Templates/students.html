@@ -1,83 +1,66 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>Students</title>
-
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRAS — Students</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
 <div class="shell">
 
-<div class="sidebar">
+  <div class="sidebar">
+    <div class="logo">FRAS</div>
+    <ul>
+      <li><a href="/">Dashboard</a></li>
+      <li><a href="/recognition">Start Attendance</a></li>
+      <li><a href="/register">Register Student</a></li>
+      <li><a href="/attendance">Attendance</a></li>
+      <li><a href="/students">Students</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </div>
 
-<div class="logo">FRAS</div>
+  <div class="main">
 
-<ul>
+    <h2>Student Management</h2>
+    <p class="page-sub">View, edit or remove registered students</p>
 
-<li><a href="/">Dashboard</a></li>
-<li><a href="/register">Register Student</a></li>
-<li><a href="/attendance">Attendance</a></li>
-<li><a href="/students">Students</a></li>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
+      {% for s in students %}
+      <tr>
+        <td>{{ s[0] }}</td>
+        <td>{{ s[1] }}</td>
+        <td style="display:flex; gap:8px; align-items:center;">
+          <a href="/edit_student/{{ s[0] }}" class="btn btn-outline"
+             style="padding:6px 14px; font-size:12px;">Edit</a>
+          <a href="/delete_student/{{ s[0] }}" class="btn btn-danger"
+             style="padding:6px 14px; font-size:12px;"
+             onclick="return confirm('Delete this student and all their attendance records?')">
+            Delete
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not students %}
+      <tr>
+        <td colspan="3" style="text-align:center; color:var(--text-muted); padding:34px;">
+          No students registered yet.
+          <a href="/register" style="color:var(--purple-mid); font-weight:600; margin-left:6px;">Register one →</a>
+        </td>
+      </tr>
+      {% endif %}
+    </table>
 
-</ul>
-
-</div>
-
-
-<div class="main">
-
-<h2>Students List</h2>
-
-<table>
-
-<thead>
-
-<tr>
-<th>ID</th>
-<th>Name</th>
-<th>Action</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for student in students %}
-
-<tr>
-
-<td>{{ student[0] }}</td>
-<td>{{ student[1] }}</td>
-
-<td>
-
-<a href="/delete/{{ student[0] }}"
-class="btn btn-danger"
-onclick="return confirm('Delete student?')">
-
-Delete
-
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
+  </div>
 
 </div>
 
 </body>
-
 </html>

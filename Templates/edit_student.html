@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRAS — Edit Student</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="sidebar">
+    <div class="logo">FRAS</div>
+    <ul>
+      <li><a href="/">Dashboard</a></li>
+      <li><a href="/recognition">Start Attendance</a></li>
+      <li><a href="/register">Register Student</a></li>
+      <li><a href="/attendance">Attendance</a></li>
+      <li><a href="/students">Students</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+
+    <h2>Edit Student</h2>
+    <p class="page-sub">Editing Student ID: <strong>{{ student_id }}</strong></p>
+
+    <form method="POST">
+
+      <div class="form-group">
+        <label class="form-label">New Student Name</label>
+        <input class="form-input" type="text" name="name" placeholder="Enter updated name" required>
+      </div>
+
+      <div style="display:flex; gap:12px; align-items:center;">
+        <button type="submit" class="btn-primary">Update Student</button>
+        <a href="/students" class="btn btn-outline">Cancel</a>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+</body>
+</html>

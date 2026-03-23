@@ -1,0 +1,26 @@
+# Environment variables — never push this
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Face data & trained model — large files, keep local
+data/faces/
+data/trainer.yml
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

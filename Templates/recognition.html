@@ -1,42 +1,69 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>Attendance Recognition</title>
-
-<link rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
-
-<script src="{{ url_for('static', filename='script.js') }}"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRAS — Face Recognition</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<div class="main">
+<div class="shell">
 
-<h2>Face Recognition Attendance</h2>
+  <div class="sidebar">
+    <div class="logo">FRAS</div>
+    <ul>
+      <li><a href="/">Dashboard</a></li>
+      <li><a href="/recognition">Start Attendance</a></li>
+      <li><a href="/register">Register Student</a></li>
+      <li><a href="/attendance">Attendance</a></li>
+      <li><a href="/students">Students</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </div>
 
-<div class="camera-box">
+  <div class="main">
 
-<img src="{{ url_for('video_feed') }}" width="600">
+    <h2>Face Recognition</h2>
+    <p class="page-sub">Preview the camera, then start recognition to mark attendance</p>
+
+    <div class="camera-box">
+      <h3>Live Camera Preview</h3>
+      <img id="camera-feed" src="" alt="Camera feed">
+      <br><br>
+      <div style="display:flex; gap:10px;">
+        <button type="button" onclick="startCamera()">Start Camera</button>
+        <button type="button" onclick="stopCamera()">Stop Camera</button>
+      </div>
+    </div>
+
+    <br><br>
+
+    <a href="/start_recognition" class="btn btn-primary" style="font-size:15px; padding:13px 30px;">
+      Start Recognition & Mark Attendance
+    </a>
+
+    <p style="margin-top:14px; font-size:13px; color:var(--text-muted);">
+      Note: The recognition window will open on the server. Look at the camera for up to 15 seconds.
+    </p>
+
+  </div>
 
 </div>
 
-<br>
-
-<button onclick="startRecognition()" class="btn btn-primary">
-
-Start Recognition
-
-</button>
-
-<br><br>
-
-<a href="/" class="btn btn-outline">Back</a>
-
-</div>
+<script>
+let cameraRunning = false;
+function startCamera() {
+  if (!cameraRunning) {
+    document.getElementById("camera-feed").src = "/video_feed";
+    cameraRunning = true;
+  }
+}
+function stopCamera() {
+  document.getElementById("camera-feed").src = "";
+  cameraRunning = false;
+}
+</script>
 
 </body>
 </html>
