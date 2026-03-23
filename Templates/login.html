@@ -5,19 +5,406 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FRAS — Admin Login</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,600&family=Lora:wght@400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Lora', serif;
+      min-height: 100vh;
+      display: flex;
+      background: #0f0a1e;
+    }
+
+    /* ── Left panel ── */
+    .left-panel {
+      flex: 1;
+      position: relative;
+      background: linear-gradient(135deg, #2D1B69 0%, #5B3EB5 60%, #1A9A8A 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 50px;
+      overflow: hidden;
+    }
+
+    /* Particle canvas */
+    #particle-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    /* Decorative circles */
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.08);
+      top: -100px; left: -100px;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      border: 1px solid rgba(62,201,182,0.15);
+      bottom: -60px; right: -60px;
+    }
+
+    .left-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: 420px;
+    }
+
+    /* SVG illustration */
+    .illustration {
+      width: 260px;
+      height: 200px;
+      margin: 0 auto 36px;
+    }
+
+    .left-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 38px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      line-height: 1.1;
+    }
+
+    .left-title span {
+      display: block;
+      font-style: italic;
+      font-size: 22px;
+      font-weight: 400;
+      color: #3EC9B6;
+      letter-spacing: 4px;
+      margin-top: 4px;
+    }
+
+    .quote-block {
+      margin-top: 36px;
+      padding: 20px 24px;
+      border-left: 3px solid rgba(62,201,182,0.6);
+      text-align: left;
+      background: rgba(255,255,255,0.05);
+      border-radius: 0 10px 10px 0;
+    }
+
+    .quote-text {
+      font-size: 15px;
+      font-style: italic;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.7;
+    }
+
+    .quote-author {
+      font-size: 12px;
+      color: #3EC9B6;
+      margin-top: 10px;
+      letter-spacing: 1px;
+      font-style: normal;
+    }
+
+    .feature-pills {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .pill {
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.80);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Right panel ── */
+    .right-panel {
+      width: 480px;
+      flex-shrink: 0;
+      background: #FDFAF4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 50px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .login-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      background: linear-gradient(135deg, #5B3EB5, #1A9A8A);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .login-tagline {
+      font-size: 13px;
+      color: #6B5FA0;
+      margin-bottom: 36px;
+      letter-spacing: 0.3px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6B5FA0;
+      margin-bottom: 7px;
+    }
+
+    .field-wrap {
+      margin-bottom: 20px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(91,62,181,0.18);
+      background: #fff;
+      color: #1A1030;
+      font-family: 'Lora', serif;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .field-input:focus {
+      border-color: #5B3EB5;
+      box-shadow: 0 0 0 3px rgba(91,62,181,0.10);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #5B3EB5, #1A9A8A);
+      color: #fff;
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 18px rgba(91,62,181,0.30);
+      transition: all 0.22s ease;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(91,62,181,0.38);
+      filter: brightness(1.07);
+    }
+
+    .login-footer {
+      margin-top: 28px;
+      font-size: 12px;
+      color: #9B93C0;
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .left-panel { display: none; }
+      .right-panel { width: 100%; }
+      body { background: #F0EEFF; }
+    }
+  </style>
 </head>
-<body class="login-page">
+<body>
 
-  <div class="login-box">
-    <div class="login-logo">FRAS</div>
-    <p class="login-sub">Face Recognition Attendance System</p>
+  <!-- Left decorative panel -->
+  <div class="left-panel">
+    <canvas id="particle-canvas"></canvas>
 
-    <form method="POST">
-      <input type="text" name="username" placeholder="Username" required>
-      <input type="password" name="password" placeholder="Password" required>
-      <button type="submit">Login →</button>
-    </form>
+    <div class="left-content">
+
+      <!-- Illustration: face scan SVG -->
+      <div class="illustration">
+        <svg viewBox="0 0 260 200" xmlns="http://www.w3.org/2000/svg" width="260" height="200">
+          <!-- Face outline -->
+          <ellipse cx="130" cy="95" rx="55" ry="65" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+          <!-- Face fill -->
+          <ellipse cx="130" cy="95" rx="52" ry="62" fill="rgba(255,255,255,0.06)"/>
+          <!-- Eyes -->
+          <ellipse cx="112" cy="82" rx="7" ry="5" fill="none" stroke="#3EC9B6" stroke-width="1.5"/>
+          <circle cx="112" cy="82" r="2.5" fill="#3EC9B6"/>
+          <ellipse cx="148" cy="82" rx="7" ry="5" fill="none" stroke="#3EC9B6" stroke-width="1.5"/>
+          <circle cx="148" cy="82" r="2.5" fill="#3EC9B6"/>
+          <!-- Nose -->
+          <path d="M130 88 Q126 96 124 100 Q130 103 136 100 Q134 96 130 88Z" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+          <!-- Mouth -->
+          <path d="M118 112 Q130 120 142 112" fill="none" stroke="#3EC9B6" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Scan lines -->
+          <line x1="75" y1="70" x2="95" y2="70" stroke="#3EC9B6" stroke-width="1" opacity="0.8"/>
+          <line x1="165" y1="70" x2="185" y2="70" stroke="#3EC9B6" stroke-width="1" opacity="0.8"/>
+          <line x1="75" y1="120" x2="95" y2="120" stroke="#3EC9B6" stroke-width="1" opacity="0.8"/>
+          <line x1="165" y1="120" x2="185" y2="120" stroke="#3EC9B6" stroke-width="1" opacity="0.8"/>
+          <!-- Corner brackets -->
+          <path d="M68 55 L68 45 L78 45" fill="none" stroke="#8B6FD4" stroke-width="2" stroke-linecap="round"/>
+          <path d="M182 55 L182 45 L172 45" fill="none" stroke="#8B6FD4" stroke-width="2" stroke-linecap="round"/>
+          <path d="M68 145 L68 155 L78 155" fill="none" stroke="#8B6FD4" stroke-width="2" stroke-linecap="round"/>
+          <path d="M182 145 L182 155 L172 155" fill="none" stroke="#8B6FD4" stroke-width="2" stroke-linecap="round"/>
+          <!-- Scanning line animation -->
+          <line id="scan-line" x1="78" y1="70" x2="182" y2="70" stroke="#3EC9B6" stroke-width="1.5" opacity="0.6"/>
+          <!-- Dots around face -->
+          <circle cx="75" cy="95" r="2" fill="#8B6FD4" opacity="0.7"/>
+          <circle cx="185" cy="95" r="2" fill="#8B6FD4" opacity="0.7"/>
+          <circle cx="130" cy="30" r="2" fill="#3EC9B6" opacity="0.7"/>
+          <circle cx="130" cy="165" r="2" fill="#3EC9B6" opacity="0.7"/>
+          <!-- Grid dots background -->
+          <g opacity="0.15">
+            <circle cx="20" cy="20" r="1.5" fill="white"/>
+            <circle cx="50" cy="20" r="1.5" fill="white"/>
+            <circle cx="210" cy="20" r="1.5" fill="white"/>
+            <circle cx="240" cy="20" r="1.5" fill="white"/>
+            <circle cx="20" cy="180" r="1.5" fill="white"/>
+            <circle cx="50" cy="180" r="1.5" fill="white"/>
+            <circle cx="210" cy="180" r="1.5" fill="white"/>
+            <circle cx="240" cy="180" r="1.5" fill="white"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="left-title">
+        FRAS
+        <span>Attendance System</span>
+      </div>
+
+      <div class="quote-block">
+        <p class="quote-text">"The secret of getting ahead is getting started. Attendance is the first step to success."</p>
+        <p class="quote-author">— Mark Twain</p>
+      </div>
+
+      <div class="feature-pills">
+        <span class="pill">Face Recognition</span>
+        <span class="pill">Auto Attendance</span>
+        <span class="pill">Live Analytics</span>
+      </div>
+
+    </div>
   </div>
+
+  <!-- Right login panel -->
+  <div class="right-panel">
+    <div class="login-box">
+
+      <div class="login-logo">FRAS</div>
+      <p class="login-tagline">Face Recognition Attendance System — Admin Portal</p>
+
+      <form method="POST">
+
+        <div class="field-wrap">
+          <label class="field-label">Username</label>
+          <input class="field-input" type="text" name="username" placeholder="Enter username" required autofocus>
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label">Password</label>
+          <input class="field-input" type="password" name="password" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="login-btn">Sign In</button>
+
+      </form>
+
+      <p class="login-footer">Secure admin access only &nbsp;·&nbsp; FRAS v1.0</p>
+
+    </div>
+  </div>
+
+  <script>
+    // Particle animation on left panel
+    const canvas  = document.getElementById('particle-canvas');
+    const ctx     = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function randomBetween(a, b) { return a + Math.random() * (b - a); }
+
+    for (let i = 0; i < 55; i++) {
+      particles.push({
+        x:     randomBetween(0, canvas.width),
+        y:     randomBetween(0, canvas.height),
+        r:     randomBetween(1, 3),
+        dx:    randomBetween(-0.3, 0.3),
+        dy:    randomBetween(-0.4, 0.4),
+        alpha: randomBetween(0.2, 0.7),
+        color: Math.random() > 0.5 ? '62,201,182' : '139,111,212'
+      });
+    }
+
+    // Scanning line
+    let scanY    = 45;
+    let scanDir  = 1;
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw particles and connecting lines
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width)  p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+        ctx.fill();
+
+        // Connect nearby particles
+        for (let j = i + 1; j < particles.length; j++) {
+          const q    = particles[j];
+          const dist = Math.hypot(p.x - q.x, p.y - q.y);
+          if (dist < 90) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(139,111,212,${0.12 * (1 - dist / 90)})`;
+            ctx.lineWidth   = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
 
 </body>
 </html>
