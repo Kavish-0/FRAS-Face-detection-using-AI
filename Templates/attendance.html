@@ -27,6 +27,41 @@
     <h2>Attendance Records</h2>
     <p class="page-sub">Filter and export attendance data</p>
 
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <div style="padding:12px 18px; border-radius:10px; margin-bottom:16px; font-size:14px; font-weight:500;
+          {% if category == 'success' %}background:#e6f9f0; color:#166534; border:1px solid #bbf7d0;
+          {% elif category == 'warning' %}background:#fffbeb; color:#92400e; border:1px solid #fde68a;
+          {% else %}background:#fde8e8; color:#b91c1c; border:1px solid #f5c2c2;{% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Manual Attendance -->
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:14px;
+                padding:20px 24px; margin-bottom:28px;">
+      <h3 style="margin:0 0 6px 0; font-size:15px;">Manual Attendance</h3>
+      <p style="margin:0 0 16px 0; font-size:13px; color:var(--text-muted);">
+        Mark attendance manually if a student's face wasn't recognized.
+      </p>
+      <form method="POST" action="/manual_attendance" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <select name="student_id" required
+          style="padding:10px 14px; border-radius:8px; border:1px solid var(--border);
+                 background:var(--bg); color:var(--text); font-size:14px; min-width:220px;">
+          <option value="" disabled selected>Select a student</option>
+          {% for s in students %}
+          <option value="{{ s[0] }}">{{ s[1] }} (ID: {{ s[0] }})</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn-primary">Mark Attendance</button>
+      </form>
+    </div>
+
+    <!-- Filter Bar -->
     <form method="GET" class="filter-bar">
       <input type="text" name="name" placeholder="Search by student name"
              value="{{ request.args.get('name', '') }}">
