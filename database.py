@@ -75,15 +75,120 @@ def get_student_name(student_id):
 
 
 def mark_attendance(student_id):
+    """Returns 'marked' on success, 'already' if attendance already exists for today."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO attendance (id, date, time) VALUES (%s, CURDATE(), NOW())",
+            (student_id,)
+        )
+        conn.commit()
+        return "marked"
+    except mysql.connector.errors.IntegrityError as e:
+        if e.errno == 1062:
+            return "already"
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def add_past_attendance(student_id, date, time):
+    """
+    Insert an attendance record for a past date.
+    Returns 'marked' on success, 'already' if a record already exists for that date.
+    """
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO attendance (id, date, time) VALUES (%s, %s, %s)",
+            (student_id, date, time)
+        )
+        conn.commit()
+        return "marked"
+    except mysql.connector.errors.IntegrityError as e:
+        if e.errno == 1062:
+            return "already"
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def edit_attendance(original_name, original_date, new_name, new_date, new_time):
+    """Edit an existing attendance record — can change student, date, and time."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    # Get student id from new_name
+    cursor.execute("SELECT id FROM students WHERE name=%s", (new_name,))
+    result = cursor.fetchone()
+    if not result:
+        cursor.close()
+        conn.close()
+        return False
+    new_id = result[0]
+    # Get original student id
+    cursor.execute("SELECT id FROM students WHERE name=%s", (original_name,))
+    orig = cursor.fetchone()
+    if not orig:
+        cursor.close()
+        conn.close()
+        return False
+    original_id = orig[0]
+    try:
+        cursor.execute("""
+            UPDATE attendance
+            SET id=%s, date=%s, time=%s
+            WHERE id=%s AND date=%s
+        """, (new_id, new_date, new_time, original_id, original_date))
+        conn.commit()
+        return True
+    except mysql.connector.errors.IntegrityError:
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def remove_today_attendance(student_id):
+    """Remove today's attendance for a specific student."""
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO attendance (id, date, time) VALUES (%s, CURDATE(), NOW())",
+        "DELETE FROM attendance WHERE id=%s AND date=CURDATE()",
         (student_id,)
     )
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def remove_attendance_by_record(student_name, date):
+    """Remove a specific attendance record by student name and date."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        DELETE attendance FROM attendance
+        JOIN students ON attendance.id = students.id
+        WHERE students.name = %s AND attendance.date = %s
+        LIMIT 1
+    """, (student_name, date))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def get_today_present_ids():
+    """Return a set of student IDs who have attendance marked today."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM attendance WHERE date = CURDATE()")
+    ids = {row[0] for row in cursor.fetchall()}
+    cursor.close()
+    conn.close()
+    return ids
 
 
 def reset_today_attendance():

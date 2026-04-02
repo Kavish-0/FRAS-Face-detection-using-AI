@@ -1,4 +1,5 @@
 import cv2
+from datetime import datetime, date
 from flask import (
     Flask,
     render_template,
@@ -29,7 +30,12 @@ from database import (
     reset_today_attendance,
     export_csv,
     mark_attendance,
-    get_student_name
+    get_student_name,
+    remove_today_attendance,
+    remove_attendance_by_record,
+    get_today_present_ids,
+    add_past_attendance,
+    edit_attendance,
 )
 
 app = Flask(__name__)
@@ -37,7 +43,6 @@ app.secret_key = "fras_secret"
 
 
 # ── Camera preview ────────────────────────────────────────────────────
-# camera is None at startup — only opened when /video_feed is requested.
 
 camera = None
 
@@ -132,15 +137,12 @@ def start_recognition():
 
     global camera
 
-    # Release preview camera if it's open
     if camera and camera.isOpened():
         camera.release()
         camera = None
 
-    # Run recognition (no cv2 window — silent on Mac)
     name, status = run_recognition()
 
-    # Flash a message based on result
     if status == 'marked':
         flash(f"✅ Welcome, {name}! Attendance marked.", "success")
     elif status == 'already':
@@ -185,7 +187,6 @@ def register():
 
         global camera
 
-        # Release preview camera if open
         if camera and camera.isOpened():
             camera.release()
             camera = None
@@ -206,10 +207,22 @@ def attendance():
     if "admin" not in session:
         return redirect(url_for("login"))
 
-    name    = request.args.get("name")
-    date    = request.args.get("date")
-    records = get_attendance_records(name, date)
-    return render_template("attendance.html", records=records, students=get_all_students())
+    name      = request.args.get("name")
+    date_filter = request.args.get("date")
+    records   = get_attendance_records(name, date_filter)
+    students  = get_all_students()
+    today_ids = get_today_present_ids()
+    today_present = len(today_ids)
+    today_date = date.today().isoformat()   # for max= on past date picker
+
+    return render_template(
+        "attendance.html",
+        records=records,
+        students=students,
+        today_ids=today_ids,
+        today_present=today_present,
+        today_date=today_date,
+    )
 
 
 @app.route("/manual_attendance", methods=["POST"])
@@ -219,11 +232,90 @@ def manual_attendance():
 
     student_id = request.form.get("student_id")
     if student_id:
-        name = get_student_name(student_id)
-        mark_attendance(student_id)
-        flash(f"✅ Attendance marked manually for {name}.", "success")
+        name   = get_student_name(student_id)
+        status = mark_attendance(student_id)
+        if status == "already":
+            flash(f"⚠️ Attendance already marked for {name} today.", "warning")
+        else:
+            flash(f"✅ Attendance marked manually for {name}.", "success")
 
     return redirect(url_for("attendance"))
+
+
+@app.route("/remove_attendance", methods=["POST"])
+def remove_attendance():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    student_id = request.form.get("student_id")
+    if student_id:
+        name = get_student_name(student_id)
+        remove_today_attendance(student_id)
+        flash(f"🗑️ Today's attendance removed for {name}.", "warning")
+
+    return redirect(url_for("attendance"))
+
+
+@app.route("/remove_attendance_by_record", methods=["POST"])
+def remove_attendance_by_record_route():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    student_name = request.form.get("student_name")
+    record_date  = request.form.get("date")
+    if student_name and record_date:
+        remove_attendance_by_record(student_name, record_date)
+        flash(f"🗑️ Attendance record removed for {student_name} on {record_date}.", "warning")
+
+    return redirect(url_for("attendance") + "?tab=records")
+
+
+@app.route("/add_past_attendance", methods=["POST"])
+def add_past_attendance_route():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    student_id = request.form.get("student_id")
+    past_date  = request.form.get("date")
+    past_time  = request.form.get("time") or "09:00:00"
+
+    # Ensure time has seconds
+    if len(past_time) == 5:
+        past_time += ":00"
+
+    if student_id and past_date:
+        name   = get_student_name(student_id)
+        status = add_past_attendance(student_id, past_date, past_time)
+        if status == "already":
+            flash(f"⚠️ Attendance already exists for {name} on {past_date}.", "warning")
+        else:
+            flash(f"✅ Past attendance added for {name} on {past_date}.", "success")
+
+    return redirect(url_for("attendance") + "?tab=addpast")
+
+
+@app.route("/edit_attendance", methods=["POST"])
+def edit_attendance_route():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    original_name = request.form.get("original_name")
+    original_date = request.form.get("original_date")
+    new_name      = request.form.get("student_name")
+    new_date      = request.form.get("date")
+    new_time      = request.form.get("time") or "09:00:00"
+
+    if len(new_time) == 5:
+        new_time += ":00"
+
+    if all([original_name, original_date, new_name, new_date]):
+        success = edit_attendance(original_name, original_date, new_name, new_date, new_time)
+        if success:
+            flash(f"✅ Attendance record updated for {new_name} on {new_date}.", "success")
+        else:
+            flash("⚠️ Could not update record — a record for that student/date may already exist.", "warning")
+
+    return redirect(url_for("attendance") + "?tab=records")
 
 
 # ── Export ────────────────────────────────────────────────────────────
