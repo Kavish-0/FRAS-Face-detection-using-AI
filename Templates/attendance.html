@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/static/style.css">
   <style>
     .attendance-panel {
-      background: var(--card);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 24px;
@@ -30,12 +30,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--bg);
+      background: var(--surface2);
       transition: border-color 0.2s;
     }
-    .student-card:hover { border-color: #6366f1; }
+    .student-card:hover { border-color: var(--purple-mid); }
     .student-info { display: flex; flex-direction: column; gap: 3px; }
-    .student-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .student-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
     .student-id   { font-size: 12px; color: var(--text-muted); }
     .status-badge {
       display: inline-flex; align-items: center; gap: 5px;
@@ -49,25 +49,29 @@
     /* ── Buttons ── */
     .btn-mark {
       padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-      border: none; cursor: pointer; background: #6366f1; color: #fff; transition: background 0.2s;
+      border: none; cursor: pointer; background: var(--gradient-btn); color: #fff; transition: background 0.2s;
     }
-    .btn-mark:hover { background: #4f46e5; }
+    .btn-mark:hover { background: var(--purple-deep); }
     .btn-remove {
-      padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-      border: 1px solid #fecaca; cursor: pointer; background: #fef2f2; color: #b91c1c; transition: background 0.2s;
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      border: 1px solid #fecaca; cursor: pointer; background: #fef2f2; color: #b91c1c;
+      transition: background 0.2s; line-height: 1.4;
+      display: inline-flex; align-items: center;
     }
     .btn-remove:hover { background: #fee2e2; }
     .btn-edit {
-      padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-      border: 1px solid #bfdbfe; cursor: pointer; background: #eff6ff; color: #1d4ed8; transition: background 0.2s;
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      border: 1px solid var(--purple-light); cursor: pointer; background: var(--purple-pale);
+      color: var(--purple-mid); transition: background 0.2s; line-height: 1.4;
+      display: inline-flex; align-items: center;
     }
     .btn-edit:hover { background: #dbeafe; }
 
     /* ── Search ── */
     .search-students {
       width: 100%; padding: 10px 14px; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--bg);
-      color: var(--text); font-size: 14px; margin-bottom: 16px; box-sizing: border-box;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text-primary); font-size: 14px; margin-bottom: 16px; box-sizing: border-box;
     }
 
     /* ── Flash ── */
@@ -87,7 +91,7 @@
       border: none; background: none; cursor: pointer; color: var(--text-muted);
       border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
     }
-    .tab-btn.active { color: #6366f1; border-bottom-color: #6366f1; }
+    .tab-btn.active { color: var(--purple-mid); border-bottom-color: var(--purple-mid); }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
@@ -105,7 +109,7 @@
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--card); border: 1px solid var(--border);
+      background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; padding: 28px; width: 100%; max-width: 420px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
@@ -113,19 +117,19 @@
     .modal label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; margin-top: 14px; }
     .modal input, .modal select {
       width: 100%; padding: 9px 12px; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--bg);
-      color: var(--text); font-size: 14px; box-sizing: border-box;
+      border: 1px solid var(--border); background: var(--surface2);
+      color: var(--text-primary); font-size: 14px; box-sizing: border-box;
     }
     .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
     .btn-cancel {
       padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
-      border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface2); color: var(--text-primary); cursor: pointer;
     }
     .btn-save {
       padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
-      border: none; background: #6366f1; color: #fff; cursor: pointer;
+      border: none; background: var(--gradient-btn); color: #fff; cursor: pointer;
     }
-    .btn-save:hover { background: #4f46e5; }
+    .btn-save:hover { background: var(--purple-deep); }
 
     /* ── Add past record form ── */
     .add-past-form {
@@ -135,11 +139,11 @@
     .add-past-form label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
     .add-past-form select, .add-past-form input {
       padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--bg); color: var(--text); font-size: 13px;
+      background: var(--surface2); color: var(--text-primary); font-size: 13px;
     }
 
     /* ── Table action buttons ── */
-    .table-actions { display: flex; gap: 6px; }
+    .table-actions { display: flex; gap: 6px; align-items: center; }
   </style>
 </head>
 <body>
@@ -254,7 +258,7 @@
                 </button>
                 <!-- Remove -->
                 <form method="POST" action="/remove_attendance_by_record"
-                      onsubmit="return confirm('Remove this record?')" style="display:inline;">
+                      onsubmit="return confirm('Remove this record?')" style="display:inline-flex; align-items:center;">
                   <input type="hidden" name="student_name" value="{{ r[0] }}">
                   <input type="hidden" name="date" value="{{ r[1] }}">
                   <button type="submit" class="btn-remove">Remove</button>

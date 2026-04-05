@@ -320,5 +320,26 @@ def export_csv():
     writer = csv.writer(output)
     writer.writerow(["Name", "Date", "Time"])
     for row in records:
-        writer.writerow(row)
+        name = row[0]
+        # Format date as DD/MM/YYYY so Excel reads it correctly (not ########)
+        try:
+            if hasattr(row[1], 'strftime'):
+                date_str = row[1].strftime("%d/%m/%Y")
+            else:
+                from datetime import datetime
+                date_str = datetime.strptime(str(row[1]), "%Y-%m-%d").strftime("%d/%m/%Y")
+        except Exception:
+            date_str = str(row[1])
+        # Format time as HH:MM:SS string
+        try:
+            if hasattr(row[2], 'seconds'):
+                total = int(row[2].total_seconds())
+                h, r = divmod(total, 3600)
+                m, s = divmod(r, 60)
+                time_str = f"{h:02d}:{m:02d}:{s:02d}"
+            else:
+                time_str = str(row[2])
+        except Exception:
+            time_str = str(row[2])
+        writer.writerow([name, date_str, time_str])
     return output.getvalue()
